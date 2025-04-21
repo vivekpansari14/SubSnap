@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SubSnap - Subtitle Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/@floriangraef/color-picker"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>SubSnap</h1>
+            <p>Transform your audio and video files into dynamic, color-coded subtitles.</p>
+        </div>
+        <div class="upload-section">
+            <label for="file-upload" class="upload-label">Upload File</label>
+            <input type="file" id="file-upload" class="file-upload" accept="audio/*,video/*">
+        </div>
+        <div class="options">
+            <div class="option">
+                <label for="color-picker">Subtitle Color</label>
+                <input type="color" id="color-picker" class="color-picker" value="#FFFF00">
+            </div>
+            <div class="option">
+                <label for="font-size">Font Size</label>
+                <input type="number" id="font-size" class="font-size" value="24" min="10" max="100">
+            </div>
+            <div class="option">
+                <label for="max-words">Max Words per Subtitle</label>
+                <input type="number" id="max-words" class="max-words" value="10" min="1" max="20">
+            </div>
+            <div class="option">
+                <label for="color-words">How Many Words to Color</label>
+                <input type="number" id="color-words" class="color-words" value="1" min="1" max="10">
+            </div>
+        </div>
+        <button id="generate-btn" class="generate-btn">Generate Subtitles</button>
+        <div id="result" class="result">
+            <p>Generated subtitles will appear here.</p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
