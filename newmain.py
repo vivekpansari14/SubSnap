@@ -102,43 +102,31 @@ def transcribe(audio_path, model_size="small", device="cpu"):
     return words
 
 if __name__ == "__main__":
-    audio_file = input("File path (audio or video): ")
+    if len(sys.argv) < 4:
+        print("Usage: python newmain.py <file> <delay> <max_words> [words_to_color] [color] [font_size]")
+        sys.exit(1)
+
+    audio_file = sys.argv[1]
+    delay = float(sys.argv[2])
+    max_words = int(sys.argv[3])
+    words_to_color = int(sys.argv[4]) if len(sys.argv) > 4 else 0
+    color = sys.argv[5] if len(sys.argv) > 5 else None
+    font_size = int(sys.argv[6]) if len(sys.argv) > 6 else None
 
     if not audio_file.lower().endswith((".wav", ".mp3", ".m4a", ".flac")):
-        print("Extracting audio...")
         audio_path = "temp_audio.wav"
         ffmpeg.input(audio_file).output(audio_path, ac=1, ar='16k').run(overwrite_output=True, quiet=True)
     else:
         audio_path = audio_file
 
-    try:
-        delay = float(input("No-sound delay (e.g., 0.3): "))
-        max_words = int(input("Max words per subtitle (e.g., 10): "))
-
-        words_to_color_input = input("How many words to color per subtitle? (optional): ").strip()
-        words_to_color = int(words_to_color_input) if words_to_color_input else 0
-
-        color_input = input("Color name or hex code (optional, e.g., yellow or #FFD700): ").strip()
-        color = color_input if color_input else None
-
-        font_size_input = input("Font size (optional, e.g., 20): ").strip()
-        font_size = int(font_size_input) if font_size_input else None
-
-    except:
-        print("Invalid input.")
-        sys.exit(1)
-
     sub_gen = Subtitles()
     sub_gen.delay = delay
 
-    print("Transcribing...")
     with HiddenPrints():
         words = transcribe(audio_path)
 
-    print("Grouping...")
     grouped = sub_gen.group_text(words, max_words)
 
-    print("Generating SRT...")
     sub_gen.gen_srt(
         os.path.splitext(audio_file)[0],
         grouped,
@@ -149,5 +137,3 @@ if __name__ == "__main__":
 
     if audio_path == "temp_audio.wav":
         os.remove(audio_path)
-
-    print("✅ Done! SRT file created.")
