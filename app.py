@@ -1,14 +1,11 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, send_from_directory
 import os
-import subprocess
 import uuid
-import warnings
-warnings.filterwarnings("ignore", category=UserWarning, module="urllib3")
 
 app = Flask(__name__)
 
 UPLOAD_FOLDER = 'uploads'
-SUBTITLE_FOLDER = os.path.join('static', 'subtitles')
+SUBTITLE_FOLDER = 'static/subtitles'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(SUBTITLE_FOLDER, exist_ok=True)
 
@@ -19,33 +16,30 @@ def index():
 @app.route('/generate_subtitle', methods=['POST'])
 def generate_subtitle():
     if 'file' not in request.files:
-        return jsonify({'error': 'No file uploaded'}), 400
+        return "No file uploaded", 400
 
     file = request.files['file']
     if file.filename == '':
-        return jsonify({'error': 'Empty filename'}), 400
+        return "No selected file", 400
 
     file_ext = os.path.splitext(file.filename)[1]
     unique_filename = str(uuid.uuid4()) + file_ext
-    file_path = os.path.join(UPLOAD_FOLDER, unique_filename)
-    file.save(file_path)
+    uploaded_path = os.path.join(UPLOAD_FOLDER, unique_filename)
+    file.save(uploaded_path)
 
-    output_name = str(uuid.uuid4())
-    output_srt_path = os.path.join(UPLOAD_FOLDER, output_name)
+    output_srt_path = os.path.splitext(uploaded_path)[0]
+    final_srt_filename = os.path.splitext(unique_filename)[0] + ".srt"
+    final_srt_path = os.path.join(SUBTITLE_FOLDER, final_srt_filename)
 
-    # Call your existing subtitle generation script
-    subprocess.run(['python3', 'newmain.py', '--input', file_path, '--output', output_srt_path])
+    # Example settings for delay, max_words, etc. — customize if needed
+    os.system(f"python3 newmain.py '{uploaded_path}' 0.3 10 2 yellow 20")
 
-    # Rename and move the generated file to static/subtitles
-    final_srt_name = output_name + '.srt'
-    final_srt_path = os.path.join(SUBTITLE_FOLDER, final_srt_name)
+    if not os.path.exists(output_srt_path + ".srt"):
+        return "Subtitle generation failed", 500
+
     os.rename(output_srt_path + '.srt', final_srt_path)
 
-    # Create the download URL
-    download_url = f"/{final_srt_path.replace(os.sep, '/')}"
+    return {"subtitle_url": f"/static/subtitles/{final_srt_filename}"}
 
-    return jsonify({'download_url': download_url})
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+if __name__ == '__main__':
+    app.run(debug=False, host='0.0.0.0', port=8080)
